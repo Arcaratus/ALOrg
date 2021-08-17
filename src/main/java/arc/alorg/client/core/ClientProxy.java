@@ -1,11 +1,14 @@
 package arc.alorg.client.core;
 
+import arc.alorg.client.render.entity.XorgRenderer;
 import arc.alorg.common.core.IProxy;
+import arc.alorg.common.entity.ModEntities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 public class ClientProxy implements IProxy {
@@ -15,6 +18,9 @@ public class ClientProxy implements IProxy {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         IEventBus forgeBus = MinecraftForge.EVENT_BUS;
+
+        registerRenderTypes();
+        registerEntityRenderers();
     }
 
     @Override
@@ -25,5 +31,13 @@ public class ClientProxy implements IProxy {
     @Override
     public PlayerEntity getClientPlayer() {
         return Minecraft.getInstance().player;
+    }
+
+    private static void registerRenderTypes() {
+
+    }
+
+    private static void registerEntityRenderers() {
+        RenderingRegistry.registerEntityRenderingHandler(ModEntities.XORG, XorgRenderer::new);
     }
 }
