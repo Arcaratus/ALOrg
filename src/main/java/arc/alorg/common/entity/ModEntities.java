@@ -12,8 +12,8 @@ import net.minecraftforge.registries.IForgeRegistry;
 public final class ModEntities {
     public static final EntityType<XorgEntity> XORG = EntityType.Builder.<XorgEntity>of(XorgEntity::new, EntityClassification.CREATURE)
             .sized(0.6F, 1.8F)
-            .setTrackingRange(16)
-            .setUpdateInterval(10)
+            .setTrackingRange(12)
+            .setUpdateInterval(1)
             .setShouldReceiveVelocityUpdates(true)
             .build("");
 
@@ -24,7 +24,7 @@ public final class ModEntities {
 
     public static void registerAttributes(EntityAttributeCreationEvent event) {
         event.put(XORG, MobEntity.createMobAttributes()
-                .add(Attributes.MOVEMENT_SPEED, 0.4)
+                .add(Attributes.MOVEMENT_SPEED, 0.6)
                 .add(Attributes.MAX_HEALTH, 20)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1)
                 .build());

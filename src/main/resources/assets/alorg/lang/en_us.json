@@ -1,5 +1,7 @@
 {
   "itemGroup.alorg": "ALOrg",
 
-  "entity.alorg.xorg": "Xorg"
+  "entity.alorg.xorg": "Xorg",
+
+  "block.alorg.goal": "Goal"
 }
