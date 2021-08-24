@@ -1,9 +1,9 @@
 package arc.alorg.common.core;
 
 import arc.alorg.ALOrg;
+import arc.alorg.common.item.ModItems;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 
 import javax.annotation.Nonnull;
 
@@ -17,6 +17,6 @@ public class ALOrgCreativeTab extends ItemGroup {
     @Nonnull
     @Override
     public ItemStack makeIcon() {
-        return new ItemStack(Items.SUGAR);
+        return new ItemStack(ModItems.ALORG_TOOL);
     }
 }

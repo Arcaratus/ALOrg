@@ -3,5 +3,7 @@
 
   "entity.alorg.xorg": "Xorg",
 
-  "block.alorg.goal": "Goal"
+  "block.alorg.goal": "Goal",
+
+  "item.alorg.alorg_tool": "ALOrg Tool"
 }
