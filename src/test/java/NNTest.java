@@ -1,3 +1,4 @@
+import arc.a2c.A2CDiscreteDense;
 import org.deeplearning4j.datasets.iterator.INDArrayDataSetIterator;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.BackpropType;
@@ -8,9 +9,9 @@ import org.deeplearning4j.nn.conf.layers.RnnOutputLayer;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.rl4j.learning.async.a3c.discrete.A3CDiscrete;
-import org.deeplearning4j.rl4j.learning.async.a3c.discrete.A3CDiscreteDense;
 import org.deeplearning4j.rl4j.network.ac.ActorCriticFactorySeparateStdDense;
-import org.deeplearning4j.rl4j.space.Encodable;
+import org.deeplearning4j.rl4j.policy.ACPolicy;
+import org.deeplearning4j.rl4j.space.Box;
 import org.nd4j.common.primitives.Pair;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -19,14 +20,19 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.nd4j.graph.UIEventSubtype.LEARNING_RATE;
 
 public class NNTest {
+    public static final String MODEL_SAVES = Paths.get("").toAbsolutePath() + "/models/";
+
     public static void main(String[] args) {
-        initNN();
+//        initNN();
+        initA3C();
     }
 
     public static void initNN() {
@@ -84,21 +90,45 @@ public class NNTest {
     }
 
     public static void initA3C() {
-        A3CDiscrete.A3CConfiguration A3C_MODEL = new A3CDiscrete.A3CConfiguration(
-                    123,            //Random seed
-                    200,    //Max step By epoch
-                    500000,      //Max step
-                    8,         //Number of threads
-                    20,             //t_max
-                    10,        //num step noop warmup
-                    0.01,     //reward scaling
-                    0.99,          //gamma
-                    1.0         //td-error clipping
-            );
+        TestMDP mdp = new TestMDP();
+//        IHistoryProcessor.Configuration HP = IHistoryProcessor.Configuration.builder()
+//                .historyLength(4)
+//                .rescaledWidth(84)
+//                .rescaledHeight(110)
+//                .croppingHeight(84)
+//                .croppingWidth(84)
+//                .offsetX(0)
+//                .offsetY(0)
+//                .skipFrame(4)
+//                .build();
 
-        ActorCriticFactorySeparateStdDense.Configuration A3C_NET =  ActorCriticFactorySeparateStdDense.Configuration
-                .builder().updater(new Adam(1e-2)).l2(0).numHiddenNodes(16).numLayer(3).build();
+        A3CDiscrete.A3CConfiguration A3C_MODEL = A3CDiscrete.A3CConfiguration.builder()
+                .seed(123)
+                .maxEpochStep(1)
+                .maxStep(10)
+                .nstep(1)
+                .numThread(1)
+                .updateStart(1)
+                .rewardFactor(0.1)
+                .gamma(0.99)
+                .errorClamp(1)
+                .build();
 
-//        A3CDiscreteDense<Encodable> a3c = new A3CDiscreteDense<>();
+        ActorCriticFactorySeparateStdDense.Configuration A3C_NET = ActorCriticFactorySeparateStdDense.Configuration
+                .builder().updater(new Adam(0.001)).l2(0).numHiddenNodes(8).numLayer(1).build();
+
+//        A3CDiscreteDense<Box> a3c = new A3CDiscreteDense<>(mdp, A3C_NET, A3C_MODEL);
+        A2CDiscreteDense<Box> a3c = new A2CDiscreteDense<>(mdp, A3C_NET, A3C_MODEL);
+        System.out.println("Starting training...");
+        a3c.train();
+
+        System.out.println("Finished training.");
+        ACPolicy<Box> pol = a3c.getPolicy();
+
+        try {
+            pol.save(MODEL_SAVES + "/val1", MODEL_SAVES + "/pol1");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

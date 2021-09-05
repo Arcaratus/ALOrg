@@ -1,25 +1,22 @@
 package arc.alorg.common.controller;
 
 import arc.alorg.common.entity.XorgEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import org.deeplearning4j.gym.StepReply;
-import org.deeplearning4j.rl4j.environment.IntegerActionSchema;
-import org.deeplearning4j.rl4j.environment.Schema;
-import org.deeplearning4j.rl4j.environment.StepResult;
 import org.deeplearning4j.rl4j.mdp.MDP;
 import org.deeplearning4j.rl4j.space.ArrayObservationSpace;
 import org.deeplearning4j.rl4j.space.DiscreteSpace;
 import org.deeplearning4j.rl4j.space.ObservationSpace;
-import org.nd4j.linalg.api.rng.Random;
+
+import java.util.Random;
 
 public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
-    private static final double BAD_MOVE_REWARD = -0.1;
-    private static final double GOAL_REWARD = 4.0;
-    private static final double TRAP_REWARD = -4.0;
-    private static final double BRANCH_REWARD = 1.0;
+    public static int count = 1;
 
-    private static final int NUM_FEATURES = 4;
+    private static final double CANNOT_ACT_REWARD = -4;
+    private static final double ACTED_BUT_STUCK_REWARD = -0.1;
+    private static final double CAN_MOVE_REWARD = 2;
+
+    private static final int NUM_FEATURES = 14;
 
     public static final int NUM_ACTIONS = 11;
 
@@ -39,28 +36,24 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
     public static final int ACTION_BREAK_X_NEG = 9;
     public static final int ACTION_BREAK_X = 10;
 
-
     private final Random rand;
 
     private DiscreteSpace actionSpace = new DiscreteSpace(NUM_ACTIONS);
-    private final ObservationSpace<XorgState> observationSpace = new ArrayObservationSpace<>(new int[] {NUM_FEATURES});
+    private final ObservationSpace<XorgState> observationSpace = new ArrayObservationSpace<>(new int[]{NUM_FEATURES});
 
     private boolean done;
-    private boolean goalReached;
+//    private boolean goalReached;
 
-    private World world;
+    //    private World world;
     private XorgEntity xorg;
-    private BlockPos goalPos;
+//    private BlockPos goalPos;
 
-    private double dx, dy, dz;
-    private double distance;
-
-    public XorgMDP(World world, XorgEntity xorg, BlockPos goalPos, Random rand) {
+    public XorgMDP(XorgEntity xorg, Random rand) {
         this.rand = rand;
 
-        this.world = world;
+//        this.world = world;
         this.xorg = xorg;
-        this.goalPos = goalPos;
+//        this.goalPos = goalPos;
     }
 
     @Override
@@ -81,23 +74,50 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
     @Override
     public XorgState reset() {
         done = false;
-        goalReached = false;
+//        goalReached = false;
 
-        dx = dy = dz = distance = 0;
-
-        return new XorgState(dx, dy, dz, distance);
+        return xorg.getXorgState();
     }
 
     @Override
     public StepReply<XorgState> step(Integer action) {
-        double reward = 0;
-        if (!done) {
-            switch (action) {
+        System.out.println("Step: " + count++);
 
+        double reward = ACTED_BUT_STUCK_REWARD;
+        if (!done) {
+            System.out.println("Action: " + action);
+            switch (action) {
+                case ACTION_BUILD_Z_NEG:
+                case ACTION_BUILD_Z:
+                case ACTION_BUILD_X_NEG:
+                case ACTION_BUILD_X:
+                    xorg.tryBuild(action);
+                    break;
+                case ACTION_BUILD_DOWN:
+                    xorg.tryJumpAndPlaceBlockUnderneath();
+                    break;
+                case ACTION_BREAK_DOWN:
+                case ACTION_BREAK_UP:
+                case ACTION_BREAK_Z_NEG:
+                case ACTION_BREAK_Z:
+                case ACTION_BREAK_X_NEG:
+                case ACTION_BREAK_X:
+                    xorg.tryBreak(action);
+                    break;
+            }
+
+            if (!xorg.acted) {
+                reward = CANNOT_ACT_REWARD;
+            } else if (!xorg.isStuckMoreThan(60)) {
+                reward = CAN_MOVE_REWARD;
+                done = true;
             }
         }
 
-        return new StepReply<>(new XorgState(dx, dy, dz, distance), reward, done, null);
+        System.out.println("RESULT = " + xorg.acted);
+
+        xorg.acted = false;
+        return new StepReply<>(xorg.getXorgState(), reward, done, null);
     }
 
     @Override
@@ -107,6 +127,6 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
 
     @Override
     public MDP<XorgState, Integer, DiscreteSpace> newInstance() {
-        return null;
+        return new XorgMDP(xorg, rand);
     }
 }

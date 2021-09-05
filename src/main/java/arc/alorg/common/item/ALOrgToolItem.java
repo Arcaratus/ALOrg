@@ -19,7 +19,10 @@ public class ALOrgToolItem extends Item {
 
         if (entity instanceof XorgEntity) {
             XorgEntity xorg = (XorgEntity) entity;
+//            System.out.println("STUCK: " + xorg.isStuck());
+//            System.out.println("Vel: " + xorg.getSpeed());
 
+            xorg.controller.runA3C();
             return ActionResultType.SUCCESS;
         }
 

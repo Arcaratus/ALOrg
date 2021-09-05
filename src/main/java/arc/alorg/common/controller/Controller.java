@@ -9,17 +9,19 @@ import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Random;
 
 public abstract class Controller {
     public static final String MODEL_SAVES = Paths.get("").toAbsolutePath() + "/models/";
     public static final String SAVE_FILE_PREFIX = "model_";
     public static int CURRENT_SAVE = 1;
 
-    static {
-        CURRENT_SAVE = getLatestModelNumber();
-    }
+//    static {
+//        CURRENT_SAVE = getLatestModelNumber();
+//    }
 
     protected ComputationGraph model;
+    protected Random random;
 
     public ComputationGraph getModel() {
         return model;

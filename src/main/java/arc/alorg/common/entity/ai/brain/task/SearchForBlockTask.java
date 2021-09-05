@@ -1,6 +1,5 @@
 package arc.alorg.common.entity.ai.brain.task;
 
-import arc.alorg.common.block.ModBlocks;
 import arc.alorg.common.entity.XorgEntity;
 import arc.alorg.common.util.MathUtil;
 import com.google.common.collect.ImmutableMap;
@@ -27,9 +26,9 @@ public class SearchForBlockTask extends Task<XorgEntity> {
 
     @Override
     protected void start(ServerWorld world, XorgEntity entity, long p_212831_3_) {
-        int yRange = 4;
-        int xzRange = 12;
-        search: for (int y = 0; y < yRange + 1; y++) {
+        int yRange = 8;
+        int xzRange = 18;
+        for (int y = 0; y < yRange + 1; y++) {
             int dy = MathUtil.coneFunc(y);
             for (int x = 0; x < xzRange + 1; x++) {
                 int dx = MathUtil.coneFunc(x);
@@ -39,10 +38,12 @@ public class SearchForBlockTask extends Task<XorgEntity> {
                     BlockState searchState = world.getBlockState(searchPos);
                     if (blockPredicate.test(searchState.getBlock())) {
                         entity.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(searchPos, 0.5F, closeEnoughDistance));
-                        break search;
+                        return;
                     }
                 }
             }
         }
+
+//        entity.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
     }
 }
