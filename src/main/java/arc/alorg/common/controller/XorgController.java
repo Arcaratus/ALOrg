@@ -2,16 +2,28 @@ package arc.alorg.common.controller;
 
 import arc.a2c.A2CDiscrete;
 import arc.a2c.A2CDiscreteDense;
+import arc.alorg.ALOrg;
 import arc.alorg.common.entity.XorgEntity;
+import org.deeplearning4j.core.storage.StatsStorage;
 import org.deeplearning4j.rl4j.learning.async.a3c.discrete.A3CDiscrete;
 import org.deeplearning4j.rl4j.network.ac.ActorCriticFactorySeparateStdDense;
 import org.deeplearning4j.rl4j.policy.ACPolicy;
+import org.deeplearning4j.ui.api.UIServer;
+import org.deeplearning4j.ui.model.stats.StatsListener;
+import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
 import org.nd4j.linalg.learning.config.Adam;
 
 import java.io.IOException;
 import java.util.Random;
 
 public class XorgController extends Controller {
+    public static UIServer uiServer = UIServer.getInstance();
+    public static StatsStorage statsStorage = new InMemoryStatsStorage();
+
+    static {
+        uiServer.attach(statsStorage);
+    }
+
     private static final double LEARNING_RATE = 0.05;
     private static final int LAYER_SIZE = 32;
     private static final int NUM_INPUTS = 8;
@@ -57,38 +69,51 @@ public class XorgController extends Controller {
 
         mdp = new XorgMDP(xorg, random);
         A3CDiscrete.A3CConfiguration A3C_MODEL = new A3CDiscrete.A3CConfiguration(
-                random.nextInt(10000),            //Random seed
-                1,    //Max step By epoch
+                random.nextInt(),    //Random seed
+                10,    //Max step By epoch
                 1,      //Max step
                 1,         //Number of threads
                 1,             //t_max
-                1,        //num step noop warmup
+                0,        //num step noop warmup
                 0.01,     //reward scaling
                 0.99,          //gamma
                 1.0         //td-error clipping
         );
 
         ActorCriticFactorySeparateStdDense.Configuration A3C_NET =  ActorCriticFactorySeparateStdDense.Configuration
-                .builder().updater(new Adam(0.01)).l2(0).numHiddenNodes(8).numLayer(2).build();
+                .builder().updater(new Adam(0.1)).useLSTM(true).l2(0).numHiddenNodes(34).numLayer(5).build();
 
         a2c = new A2CDiscreteDense<>(mdp, A3C_NET, A3C_MODEL);
     }
 
-    public void runA3C() {
+    public void setDone(boolean done) {
+        mdp.setDone(done);
+    }
+
+    public void initA2C() {
+        a2c.init();
+    }
+
+    public void runA2C() {
         if (!isRunning) {
             isRunning = true;
-            System.out.println("Started training...");
+            ALOrg.LOGGER.info("Stepping...");
             a2c.train();
             saveA3C();
             isRunning = false;
         }
     }
 
+    public void stopA2C() {
+        isRunning = false;
+        a2c.terminate();
+    }
+
     public void saveA3C() {
         try {
             ACPolicy<XorgState> policy = a2c.getPolicy();
             policy.save(MODEL_SAVES + "val1/", MODEL_SAVES + "pol1");
-            System.out.println("Successfully saved policy.");
+            ALOrg.LOGGER.info("Successfully saved policy.");
         } catch(IOException e) {
             e.printStackTrace();
         }

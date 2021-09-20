@@ -26,8 +26,8 @@ public class SearchForBlockTask extends Task<XorgEntity> {
 
     @Override
     protected void start(ServerWorld world, XorgEntity entity, long p_212831_3_) {
-        int yRange = 8;
-        int xzRange = 18;
+        int yRange = 10;
+        int xzRange = 24;
         for (int y = 0; y < yRange + 1; y++) {
             int dy = MathUtil.coneFunc(y);
             for (int x = 0; x < xzRange + 1; x++) {

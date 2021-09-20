@@ -1,5 +1,6 @@
 package arc.a2c;
 
+import arc.alorg.ALOrg;
 import org.deeplearning4j.rl4j.learning.Learning;
 import org.deeplearning4j.rl4j.learning.async.IAsyncGlobal;
 import org.deeplearning4j.rl4j.learning.configuration.IAsyncLearningConfiguration;
@@ -11,6 +12,7 @@ import org.deeplearning4j.rl4j.space.Encodable;
 
 public abstract class NormalLearning <OBSERVATION extends Encodable, ACTION, ACTION_SPACE extends ActionSpace<ACTION>, NN extends NeuralNet> extends Learning<OBSERVATION, ACTION, ACTION_SPACE, NN> {
     private final TrainingListenerList listeners = new TrainingListenerList();
+    private Learner learner;
 
     public void addListener(TrainingListener listener) {
         listeners.add(listener);
@@ -39,22 +41,28 @@ public abstract class NormalLearning <OBSERVATION extends Encodable, ACTION, ACT
         return listeners;
     }
 
-    public void train() {
-
-        System.out.println("Learning training starting...");
-
+    public void init() {
+        ALOrg.LOGGER.info("Learning started...");
         canContinue = listeners.notifyTrainingStarted();
         if (canContinue) {
-            LearnerDiscrete learner = newLearner();
+            learner = newLearner();
             learner.run();
+        }
+    }
+
+    public void train() {
+        if (canContinue) {
+            learner.step();
             monitorTraining();
         }
 
-        listeners.notifyTrainingFinished();
+        if (!canContinue) {
+            listeners.notifyTrainingFinished();
+        }
     }
 
     protected void monitorTraining() {
-        while (canContinue && !isTrainingComplete()) {
+        if (canContinue && !isTrainingComplete()) {
             canContinue = listeners.notifyTrainingProgress(this);
             if (!canContinue) {
                 return;

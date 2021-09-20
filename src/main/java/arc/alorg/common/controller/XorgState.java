@@ -8,17 +8,18 @@ public class XorgState implements Encodable {
     private final INDArray data;
 
 //    private final double dx, dy, dz;
-//    private final double distance;
+    public final double distance;
 
-    public XorgState(double dx, double dy, double dz, double distance, double[] surrounding) {
+    public XorgState(double dx, double dy, double dz, double distance, double nextX, double nextY, double nextZ, double[] surrounding) {
 //        this.dx = dx;
 //        this.dy = dy;
 //        this.dz = dz;
-//        this.distance = distance;
-        this.data = Nd4j.concat(0, Nd4j.createFromArray(dx, dy, dz, distance), Nd4j.createFromArray(surrounding));
+        this.distance = distance;
+        this.data = Nd4j.concat(0, Nd4j.createFromArray(dx, dy, dz, distance, nextX, nextY, nextZ), Nd4j.createFromArray(surrounding));
     }
 
     private XorgState(INDArray data) {
+        this.distance = data.getDouble(3);
         this.data = data.dup();
     }
 

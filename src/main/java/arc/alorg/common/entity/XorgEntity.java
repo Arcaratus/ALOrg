@@ -1,5 +1,6 @@
 package arc.alorg.common.entity;
 
+import arc.alorg.ALOrg;
 import arc.alorg.common.block.ModBlocks;
 import arc.alorg.common.controller.XorgController;
 import arc.alorg.common.controller.XorgMDP;
@@ -23,7 +24,6 @@ import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPosWrapper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -41,14 +41,16 @@ public class XorgEntity extends CreatureEntity {
 
     private static final BlockPos[] SURROUNDING = new BlockPos[] { new BlockPos(0, -1, 0), new BlockPos(0, 0, 1), new BlockPos(1, 0, 0), new BlockPos(0, 0, -1), new BlockPos(-1, 0, 0), new BlockPos(0, 1, 1), new BlockPos(1, 1, 0), new BlockPos(0, 1, -1), new BlockPos(-1, 1, 0), new BlockPos(0, 2, 0) };
 
-    private static final BlockState BUILDING_BLOCK = Blocks.BLACK_CONCRETE.defaultBlockState();
+    private static final double SPEED_THRESHOLD = 0.1;
+    private static final BlockState BUILDING_BLOCK = Blocks.PINK_CONCRETE.defaultBlockState();
 
     public XorgController controller;
 
     private long lastTimeCheck;
     private BlockPos goalPos;
+    private BlockPos nextPos;
 
-    private boolean trainingRunning = false;
+    public boolean trainingRunning = false;
     public boolean acted = false;
 
     public XorgEntity(EntityType<? extends XorgEntity> type, World world) {
@@ -56,6 +58,9 @@ public class XorgEntity extends CreatureEntity {
         controller = new XorgController(this);
 
         goalPos = BlockPos.ZERO;
+        nextPos = BlockPos.ZERO;
+        lastTimeCheck = world.getGameTime();
+        controller.initA2C();
     }
 
     @Override
@@ -108,23 +113,29 @@ public class XorgEntity extends CreatureEntity {
     public void tick() {
         super.tick();
 //        kill();
-        if (!level.isClientSide() && level.getGameTime() % 20 == 0) {
-            if (getBrain().hasMemoryValue(MemoryModuleType.WALK_TARGET)) {
-                System.out.println("Has memory");
+        if (!level.isClientSide() && level.getGameTime() % 10 == 0) {
+            if (getBrain().hasMemoryValue(MemoryModuleType.WALK_TARGET) && getNavigation().getPath() != null) {
+                ALOrg.LOGGER.info("Has memory");
                 goalPos = getBrain().getMemory(MemoryModuleType.WALK_TARGET).get().getTarget().currentBlockPosition();
-                if (getSpeed() > 0.5) {
-                    System.out.println("Moving...");
+                nextPos = getNavigation().getPath().getNextNodePos();
+                if (getDeltaMovement().length() >= SPEED_THRESHOLD) {
+                    ALOrg.LOGGER.info("Moving...");
                     lastTimeCheck = level.getGameTime();
-                } else if (!reachedGoal() && isStuckMoreThan(40) && !trainingRunning) {
+                } else if (reachedGoal()) {
+                    ALOrg.LOGGER.info("Reached goal!");
+                    controller.setDone(true);
+                    controller.stopA2C();
+                } else if (isStuckMoreThan(10) && !trainingRunning) {
                     trainingRunning = true;
-//                    System.out.println("TRAIN");
-                    controller.runA3C();
+//                    ALOrg.LOGGER.info("TRAIN");
+                    controller.runA2C();
                     trainingRunning = false;
                 }
             } else {
-                System.out.println("No memory");
+                ALOrg.LOGGER.info("No memory");
                 lastTimeCheck = level.getGameTime();
                 goalPos = BlockPos.ZERO;
+                nextPos = BlockPos.ZERO;
             }
         }
     }
@@ -154,21 +165,32 @@ public class XorgEntity extends CreatureEntity {
     }
 
     public XorgState getXorgState() {
-        Vector3d diff = position().vectorTo(Vector3d.atCenterOf(goalPos));
-        return new XorgState(diff.x, diff.y, diff.z, diff.length(), getSurroundingBlocks());
+        Vector3d goalDiff = position().vectorTo(Vector3d.atCenterOf(goalPos));
+        Vector3d nextDiff = position().vectorTo(Vector3d.atCenterOf(nextPos));
+        return new XorgState(goalDiff.x, goalDiff.y, goalDiff.z, goalDiff.length(), nextDiff.x, nextDiff.y, nextDiff.z, getSurroundingBlocks());
     }
 
     public boolean isStuckMoreThan(long time) {
-        System.out.println("DIFF: " + (level.getGameTime() - lastTimeCheck));
-        return getSpeed() < 0.5 && level.getGameTime() - lastTimeCheck >= time;
+        ALOrg.LOGGER.info("DIFF: " + (level.getGameTime() - lastTimeCheck));
+        return getDeltaMovement().length() < SPEED_THRESHOLD && level.getGameTime() - lastTimeCheck >= time;
     }
 
-    // Only for horizontal directions
+    public boolean reachedGoal() {
+        return goalPos != BlockPos.ZERO && position().distanceTo(Vector3d.atCenterOf(goalPos)) <= 1.5;
+    }
+
+    // Only for horizontal directions, starts from block underneath first
     public void tryBuild(int direction) {
-        System.out.println("Called tryBuild()");
         Direction dir = Direction.values()[direction + 2];
-        BlockPos pos = blockPosition().offset(dir.getNormal());
-        if (BlockUtil.isAir(level, pos) && checkIfBlockEdgeExists(pos)) {
+        BlockPos pos = blockPosition().offset(dir.getNormal()).below();
+        if (BlockUtil.isAir(level, pos)) {
+            level.setBlock(pos, BUILDING_BLOCK, 3);
+            acted = true;
+            return;
+        }
+
+        pos = pos.above();
+        if (BlockUtil.isAir(level, pos)) {
             level.setBlock(pos, BUILDING_BLOCK, 3);
             acted = true;
         }
@@ -186,7 +208,6 @@ public class XorgEntity extends CreatureEntity {
 
     // Scuffed probably needs fixing
     public void tryJumpAndPlaceBlockUnderneath() {
-        System.out.println("Called tryJumpAndPlaceBlockUnderneath()");
         BlockPos pos = blockPosition().above(2);
         if (BlockUtil.isAir(level, pos)) {
             jumpFromGround();
@@ -197,7 +218,6 @@ public class XorgEntity extends CreatureEntity {
 
     // All directions -> horizontal breakage starts from top then bottom
     public void tryBreak(int direction) {
-        System.out.println("Called tryBreak()");
         Direction dir = Direction.values()[direction - XorgMDP.ACTION_BREAK_DOWN];
         BlockPos pos = blockPosition().offset(dir.getNormal());
 
@@ -226,10 +246,6 @@ public class XorgEntity extends CreatureEntity {
         }
     }
 
-    public boolean reachedGoal() {
-        return goalPos == BlockPos.ZERO || position().distanceTo(Vector3d.atCenterOf(goalPos)) <= 1.5;
-    }
-
     // Returns a double[10] where s[0] is the bottom block, s[1-8] are the sides, and s[9] is the block above
     public double[] getSurroundingBlocks() {
         double[] surrounding = new double[10];
@@ -238,22 +254,21 @@ public class XorgEntity extends CreatureEntity {
             surrounding[i] = blockToInt(level.getBlockState(blockPosition().offset(SURROUNDING[i])));
         }
 
-        System.out.println(Arrays.toString(surrounding));
         return surrounding;
     }
 
-    // 0 - air block, 1 - nonsolid block, 2 - normal block, 3 - hard block, 4 - other
+    // 1 - air block, -1 - nonsolid block, -1 - normal block, -2 - hard block, 0 - other
     private int blockToInt(BlockState blockState) {
         if (blockState.getBlock() == Blocks.AIR) {
-            return 0;
-        } else if (!blockState.getMaterial().isSolid()) {
             return 1;
+        } else if (!blockState.getMaterial().isSolid()) {
+            return -1;
         } else if (blockState.getBlock().getExplosionResistance() > 20) {
-            return 3;
+            return -2;
         } else if (!blockState.getMaterial().isLiquid()) {
-            return 2;
+            return 0;
         }
 
-        return 4;
+        return -4;
     }
 }

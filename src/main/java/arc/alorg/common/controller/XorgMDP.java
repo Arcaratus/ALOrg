@@ -1,5 +1,6 @@
 package arc.alorg.common.controller;
 
+import arc.alorg.ALOrg;
 import arc.alorg.common.entity.XorgEntity;
 import org.deeplearning4j.gym.StepReply;
 import org.deeplearning4j.rl4j.mdp.MDP;
@@ -12,11 +13,13 @@ import java.util.Random;
 public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
     public static int count = 1;
 
-    private static final double CANNOT_ACT_REWARD = -4;
+    private static final double CANNOT_ACT_REWARD = -2;
     private static final double ACTED_BUT_STUCK_REWARD = -0.1;
     private static final double CAN_MOVE_REWARD = 2;
 
-    private static final int NUM_FEATURES = 14;
+    private static final double REWARD_DISTANCE_SCALE = 10;
+
+    private static final int NUM_FEATURES = 17;
 
     public static final int NUM_ACTIONS = 11;
 
@@ -71,21 +74,25 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
         return done;
     }
 
+    public void setDone(boolean done) {
+        this.done = done;
+    }
+
     @Override
     public XorgState reset() {
         done = false;
 //        goalReached = false;
 
-        return xorg.getXorgState();
+        return new XorgState(0, 0, 0, 0, 0, 0, 0, new double[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     }
 
     @Override
     public StepReply<XorgState> step(Integer action) {
-        System.out.println("Step: " + count++);
+        ALOrg.LOGGER.info("Step: " + count++);
 
         double reward = ACTED_BUT_STUCK_REWARD;
         if (!done) {
-            System.out.println("Action: " + action);
+            ALOrg.LOGGER.info("Action: " + action);
             switch (action) {
                 case ACTION_BUILD_Z_NEG:
                 case ACTION_BUILD_Z:
@@ -110,14 +117,14 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
                 reward = CANNOT_ACT_REWARD;
             } else if (!xorg.isStuckMoreThan(60)) {
                 reward = CAN_MOVE_REWARD;
-                done = true;
             }
         }
 
-        System.out.println("RESULT = " + xorg.acted);
+        ALOrg.LOGGER.info("RESULT = " + xorg.acted);
 
         xorg.acted = false;
-        return new StepReply<>(xorg.getXorgState(), reward, done, null);
+        XorgState state = xorg.getXorgState();
+        return new StepReply<>(state, reward * REWARD_DISTANCE_SCALE / Math.pow(state.distance, 2), done, null);
     }
 
     @Override

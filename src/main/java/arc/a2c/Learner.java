@@ -1,5 +1,6 @@
 package arc.a2c;
 
+import arc.alorg.ALOrg;
 import org.deeplearning4j.gym.StepReply;
 import org.deeplearning4j.rl4j.learning.HistoryProcessor;
 import org.deeplearning4j.rl4j.learning.IEpochTrainer;
@@ -25,6 +26,7 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
     boolean episodeComplete = true;
     private IHistoryProcessor historyProcessor;
 
+    private RunContext context;
     private boolean isEpisodeStarted = false;
     private final LegacyMDPWrapper<OBSERVATION, ACTION, ACTION_SPACE> mdp;
 
@@ -87,29 +89,42 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
     }
 
     public void run() {
-        RunContext context = new RunContext();
+        context = new RunContext();
 
-        System.out.println("Learner started!");
+        ALOrg.LOGGER.info("Learner started!");
 
 //        while (!getAsyncGlobal().isTrainingComplete()) {
-            if (episodeComplete) {
-                startEpisode(context);
-            }
 
-            if (!startEpoch(context)) {
-                return;
-            }
-
-            episodeComplete = handleTraining(context);
-
-            if (!finishEpoch(context)) {
-                return;
-            }
-
-            if (episodeComplete) {
-                finishEpisode(context);
-            }
+//            episodeComplete = handleTraining(context);
+//
+//            if (!finishEpoch(context)) {
+//                return;
+//            }
+//
+//            if (episodeComplete) {
+//                finishEpisode(context);
+//            }
 //        }
+    }
+
+    public void step() {
+        if (episodeComplete) {
+            startEpisode(context);
+        }
+
+        if (!startEpoch(context)) {
+            return;
+        }
+
+        episodeComplete = handleTraining(context);
+
+        if (!finishEpoch(context)) {
+            return;
+        }
+
+        if (episodeComplete) {
+            finishEpisode(context);
+        }
     }
 
     private boolean finishEpoch(RunContext context) {
@@ -147,7 +162,7 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
     private void finishEpisode(RunContext context) {
         postEpisode();
 
-        System.out.println("Episode step: " + currentEpisodeStepCount + ", Episode: " + episodeCount + ", Epoch: " + epochCount + ", reward: " + context.rewards);
+        ALOrg.LOGGER.info("Episode step: " + currentEpisodeStepCount + ", Episode: " + episodeCount + ", Epoch: " + epochCount + ", reward: " + context.rewards);
     }
 
     protected abstract NN getCurrent();
