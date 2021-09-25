@@ -2,6 +2,7 @@ package arc.alorg;
 
 import arc.alorg.client.core.ClientProxy;
 import arc.alorg.common.block.ModBlocks;
+import arc.alorg.common.block.tiles.ModTiles;
 import arc.alorg.common.core.IProxy;
 import arc.alorg.common.entity.ModEntities;
 import arc.alorg.common.item.ModItems;
@@ -9,6 +10,7 @@ import arc.alorg.data.DataGenerators;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -40,6 +42,7 @@ public class ALOrg {
         modBus.addGenericListener(Item.class, ModItems::registerItems);
         modBus.addGenericListener(Block.class, ModBlocks::registerBlocks);
         modBus.addGenericListener(Item.class, ModBlocks::registerItemBlocks);
+        modBus.addGenericListener(TileEntityType.class, ModTiles::registerTiles);
         modBus.addListener(ModEntities::registerAttributes);
 
         IEventBus forgeBus = MinecraftForge.EVENT_BUS;

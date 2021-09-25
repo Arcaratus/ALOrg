@@ -3,7 +3,8 @@
 
   "entity.alorg.xorg": "Xorg",
 
-  "block.alorg.goal": "Goal",
+  "block.alorg.goal": "Goal Block",
+  "block.alorg.training": "Training Block",
 
   "item.alorg.alorg_tool": "ALOrg Tool"
 }

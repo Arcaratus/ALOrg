@@ -60,7 +60,6 @@ public class XorgEntity extends CreatureEntity {
         goalPos = BlockPos.ZERO;
         nextPos = BlockPos.ZERO;
         lastTimeCheck = world.getGameTime();
-        controller.initA2C();
     }
 
     @Override
@@ -114,22 +113,26 @@ public class XorgEntity extends CreatureEntity {
         super.tick();
 //        kill();
         if (!level.isClientSide() && level.getGameTime() % 10 == 0) {
-            if (getBrain().hasMemoryValue(MemoryModuleType.WALK_TARGET) && getNavigation().getPath() != null) {
-                ALOrg.LOGGER.info("Has memory");
+            if (getBrain().hasMemoryValue(MemoryModuleType.WALK_TARGET)) {
                 goalPos = getBrain().getMemory(MemoryModuleType.WALK_TARGET).get().getTarget().currentBlockPosition();
-                nextPos = getNavigation().getPath().getNextNodePos();
+
+                if (getNavigation().getPath() != null) {
+                    nextPos = getNavigation().getPath().getNextNodePos();
+                }
+
                 if (getDeltaMovement().length() >= SPEED_THRESHOLD) {
                     ALOrg.LOGGER.info("Moving...");
                     lastTimeCheck = level.getGameTime();
                 } else if (reachedGoal()) {
-                    ALOrg.LOGGER.info("Reached goal!");
-                    controller.setDone(true);
-                    controller.stopA2C();
-                } else if (isStuckMoreThan(10) && !trainingRunning) {
+                    if (trainingRunning) {
+                        ALOrg.LOGGER.info("Reached goal!");
+                        trainingRunning = false;
+                        controller.setDone(true);
+                        controller.stopA2C();
+                    }
+                } else if (isStuckMoreThan(10)) {
                     trainingRunning = true;
-//                    ALOrg.LOGGER.info("TRAIN");
                     controller.runA2C();
-                    trainingRunning = false;
                 }
             } else {
                 ALOrg.LOGGER.info("No memory");
@@ -194,16 +197,6 @@ public class XorgEntity extends CreatureEntity {
             level.setBlock(pos, BUILDING_BLOCK, 3);
             acted = true;
         }
-    }
-
-    private boolean checkIfBlockEdgeExists(BlockPos pos) {
-        for (Direction direction : Direction.values()) {
-            if (BlockUtil.isAir(level, pos.offset(direction.getNormal()))) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     // Scuffed probably needs fixing

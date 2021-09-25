@@ -1,4 +1,7 @@
 898c4d43bdf4b044d151e700d4732c3f28f332ca assets/alorg/blockstates/goal.json
+55b53b9a6f8ea7271d53115e858d4c87d807e590 assets/alorg/blockstates/training.json
 6b3694e33825151ce0e76a50877a25a83c8a3bb8 assets/alorg/models/block/goal.json
+9f83743aa4f78ee1ebac3898a7c18047c8ca3929 assets/alorg/models/block/training.json
 4863943da3aaaffef36f3ea545b5b3284207d809 assets/alorg/models/item/alorg_tool.json
 767fb47196a9e7b448fe2007b6b6e3c61d4ff4d5 assets/alorg/models/item/goal.json
+34cb2c6ff91285d091d1deaf9f820a0aaaef4a2d assets/alorg/models/item/training.json

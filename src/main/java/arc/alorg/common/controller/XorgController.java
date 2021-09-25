@@ -90,23 +90,21 @@ public class XorgController extends Controller {
         mdp.setDone(done);
     }
 
-    public void initA2C() {
-        a2c.init();
-    }
-
     public void runA2C() {
         if (!isRunning) {
+            a2c.init();
             isRunning = true;
-            ALOrg.LOGGER.info("Stepping...");
-            a2c.train();
-            saveA3C();
-            isRunning = false;
         }
+
+        ALOrg.LOGGER.info("Stepping...");
+        a2c.train();
+        saveA3C();
     }
 
     public void stopA2C() {
         isRunning = false;
         a2c.terminate();
+        a2c.train();
     }
 
     public void saveA3C() {

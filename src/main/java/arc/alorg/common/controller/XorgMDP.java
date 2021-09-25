@@ -88,11 +88,9 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
 
     @Override
     public StepReply<XorgState> step(Integer action) {
-        ALOrg.LOGGER.info("Step: " + count++);
-
         double reward = ACTED_BUT_STUCK_REWARD;
         if (!done) {
-            ALOrg.LOGGER.info("Action: " + action);
+//            ALOrg.LOGGER.info("Action: " + action);
             switch (action) {
                 case ACTION_BUILD_Z_NEG:
                 case ACTION_BUILD_Z:
@@ -120,7 +118,7 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
             }
         }
 
-        ALOrg.LOGGER.info("RESULT = " + xorg.acted);
+//        ALOrg.LOGGER.info("RESULT = " + xorg.acted);
 
         xorg.acted = false;
         XorgState state = xorg.getXorgState();
