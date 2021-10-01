@@ -5,6 +5,15 @@
 
   "block.alorg.goal": "Goal Block",
   "block.alorg.training": "Training Block",
+  "block.alorg.training_glass": "Training Glass",
 
-  "item.alorg.alorg_tool": "ALOrg Tool"
+  "item.alorg.alorg_tool": "ALOrg Tool",
+
+  "tooltip.alorg.id": "ID: %d",
+
+  "command.alorg.invalid": "Invalid command!",
+  "command.alorg.set.success": "Successfully set ID to: %d",
+
+  "message.alorg.id": "Xorg ID: %d",
+  "message.alorg.set_id": "Set Xorg ID to: %d"
 }

@@ -1,9 +1,12 @@
 package arc.alorg.client.core;
 
 import arc.alorg.client.render.entity.XorgRenderer;
+import arc.alorg.common.block.ModBlocks;
 import arc.alorg.common.core.IProxy;
 import arc.alorg.common.entity.ModEntities;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.common.MinecraftForge;
@@ -34,7 +37,7 @@ public class ClientProxy implements IProxy {
     }
 
     private static void registerRenderTypes() {
-
+        RenderTypeLookup.setRenderLayer(ModBlocks.TRAINING_GLASS, RenderType.translucent());
     }
 
     private static void registerEntityRenderers() {

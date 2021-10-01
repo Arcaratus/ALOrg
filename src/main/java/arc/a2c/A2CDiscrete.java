@@ -19,7 +19,7 @@ public abstract class A2CDiscrete<OBSERVATION extends Encodable> extends NormalL
 
     final private AsyncGlobal asyncGlobal;
 
-    final private ACPolicy<OBSERVATION> policy;
+    private ACPolicy<OBSERVATION> policy;
 
     public A2CDiscrete(MDP<OBSERVATION, Integer, DiscreteSpace> mdp, IActorCritic iActorCritic, A3CLearningConfiguration conf) {
         this.iActorCritic = iActorCritic;
@@ -58,6 +58,10 @@ public abstract class A2CDiscrete<OBSERVATION extends Encodable> extends NormalL
     @Override
     public ACPolicy<OBSERVATION> getPolicy() {
         return policy;
+    }
+
+    public void setPolicy(ACPolicy<OBSERVATION> policy) {
+        this.policy = policy;
     }
 
     public IActorCritic getNeuralNet() {

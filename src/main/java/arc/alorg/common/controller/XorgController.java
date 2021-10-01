@@ -9,7 +9,6 @@ import org.deeplearning4j.rl4j.learning.async.a3c.discrete.A3CDiscrete;
 import org.deeplearning4j.rl4j.network.ac.ActorCriticFactorySeparateStdDense;
 import org.deeplearning4j.rl4j.policy.ACPolicy;
 import org.deeplearning4j.ui.api.UIServer;
-import org.deeplearning4j.ui.model.stats.StatsListener;
 import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
 import org.nd4j.linalg.learning.config.Adam;
 
@@ -24,11 +23,14 @@ public class XorgController extends Controller {
         uiServer.attach(statsStorage);
     }
 
+    public static int ID = 1;
+
     private static final double LEARNING_RATE = 0.05;
     private static final int LAYER_SIZE = 32;
     private static final int NUM_INPUTS = 8;
 
     private XorgEntity xorg;
+    private int id;
 
     private boolean isRunning;
     private XorgMDP mdp;
@@ -36,6 +38,7 @@ public class XorgController extends Controller {
 
     public XorgController(XorgEntity xorg) {
         this.xorg = xorg;
+        id = ID++;
 
         int numLabelClasses = 9;
         random = new Random();
@@ -80,7 +83,7 @@ public class XorgController extends Controller {
                 1.0         //td-error clipping
         );
 
-        ActorCriticFactorySeparateStdDense.Configuration A3C_NET =  ActorCriticFactorySeparateStdDense.Configuration
+        ActorCriticFactorySeparateStdDense.Configuration A3C_NET = ActorCriticFactorySeparateStdDense.Configuration
                 .builder().updater(new Adam(0.1)).useLSTM(true).l2(0).numHiddenNodes(34).numLayer(5).build();
 
         a2c = new A2CDiscreteDense<>(mdp, A3C_NET, A3C_MODEL);
@@ -88,6 +91,14 @@ public class XorgController extends Controller {
 
     public void setDone(boolean done) {
         mdp.setDone(done);
+    }
+
+    public int getID() {
+        return id;
+    }
+
+    public void setID(int id) {
+        this.id = id;
     }
 
     public void runA2C() {
@@ -98,7 +109,7 @@ public class XorgController extends Controller {
 
         ALOrg.LOGGER.info("Stepping...");
         a2c.train();
-        saveA3C();
+        saveA2C();
     }
 
     public void stopA2C() {
@@ -107,12 +118,26 @@ public class XorgController extends Controller {
         a2c.train();
     }
 
-    public void saveA3C() {
+    public void doAction(XorgState state) {
+//        xorg.act(a2c.getPolicy().nextAction(state));
+    }
+
+    public void saveA2C() {
         try {
             ACPolicy<XorgState> policy = a2c.getPolicy();
-            policy.save(MODEL_SAVES + "val1/", MODEL_SAVES + "pol1");
+            policy.save(MODEL_SAVES + "val" + id, MODEL_SAVES + "pol" + id);
             ALOrg.LOGGER.info("Successfully saved policy.");
         } catch(IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadA2C(int id) {
+        try {
+            this.id = id;
+            a2c.setPolicy(ACPolicy.load(MODEL_SAVES + "val" + id, MODEL_SAVES + "pol" + id));
+            ALOrg.LOGGER.info("Successfully loaded policy " + id);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

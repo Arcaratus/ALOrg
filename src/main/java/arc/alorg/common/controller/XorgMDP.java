@@ -21,27 +21,9 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
 
     private static final int NUM_FEATURES = 17;
 
-    public static final int NUM_ACTIONS = 11;
-
-    // Don't change order of anything
-    public static final int ACTION_BUILD_Z_NEG = 0;
-    public static final int ACTION_BUILD_Z = 1;
-    public static final int ACTION_BUILD_X_NEG = 2;
-    public static final int ACTION_BUILD_X = 3;
-
-    public static final int ACTION_BUILD_DOWN = 4;
-
-    public static final int ACTION_BREAK_DOWN = 5;
-    public static final int ACTION_BREAK_UP = 6;
-
-    public static final int ACTION_BREAK_Z_NEG = 7;
-    public static final int ACTION_BREAK_Z = 8;
-    public static final int ACTION_BREAK_X_NEG = 9;
-    public static final int ACTION_BREAK_X = 10;
-
     private final Random rand;
 
-    private DiscreteSpace actionSpace = new DiscreteSpace(NUM_ACTIONS);
+    private DiscreteSpace actionSpace = new DiscreteSpace(XorgEntity.NUM_ACTIONS);
     private final ObservationSpace<XorgState> observationSpace = new ArrayObservationSpace<>(new int[]{NUM_FEATURES});
 
     private boolean done;
@@ -91,25 +73,7 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
         double reward = ACTED_BUT_STUCK_REWARD;
         if (!done) {
 //            ALOrg.LOGGER.info("Action: " + action);
-            switch (action) {
-                case ACTION_BUILD_Z_NEG:
-                case ACTION_BUILD_Z:
-                case ACTION_BUILD_X_NEG:
-                case ACTION_BUILD_X:
-                    xorg.tryBuild(action);
-                    break;
-                case ACTION_BUILD_DOWN:
-                    xorg.tryJumpAndPlaceBlockUnderneath();
-                    break;
-                case ACTION_BREAK_DOWN:
-                case ACTION_BREAK_UP:
-                case ACTION_BREAK_Z_NEG:
-                case ACTION_BREAK_Z:
-                case ACTION_BREAK_X_NEG:
-                case ACTION_BREAK_X:
-                    xorg.tryBreak(action);
-                    break;
-            }
+            xorg.act(action);
 
             if (!xorg.acted) {
                 reward = CANNOT_ACT_REWARD;

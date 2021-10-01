@@ -3,7 +3,6 @@ package arc.alorg.common.entity;
 import arc.alorg.ALOrg;
 import arc.alorg.common.block.ModBlocks;
 import arc.alorg.common.controller.XorgController;
-import arc.alorg.common.controller.XorgMDP;
 import arc.alorg.common.controller.XorgState;
 import arc.alorg.common.entity.ai.brain.task.SearchForBlockTask;
 import arc.alorg.common.util.BlockUtil;
@@ -28,8 +27,6 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
-import java.util.Arrays;
-
 public class XorgEntity extends CreatureEntity {
     private static final ImmutableList<MemoryModuleType<?>> MEMORY_TYPES = ImmutableList.of(MemoryModuleType.HOME, MemoryModuleType.MEETING_POINT, MemoryModuleType.LIVING_ENTITIES, MemoryModuleType.VISIBLE_LIVING_ENTITIES, MemoryModuleType.NEAREST_PLAYERS, MemoryModuleType.NEAREST_VISIBLE_PLAYER, MemoryModuleType.NEAREST_VISIBLE_TARGETABLE_PLAYER, MemoryModuleType.NEAREST_VISIBLE_WANTED_ITEM, MemoryModuleType.WALK_TARGET, MemoryModuleType.LOOK_TARGET, MemoryModuleType.INTERACTION_TARGET, MemoryModuleType.BREED_TARGET, MemoryModuleType.PATH, MemoryModuleType.DOORS_TO_CLOSE, MemoryModuleType.NEAREST_BED, MemoryModuleType.HURT_BY, MemoryModuleType.HURT_BY_ENTITY, MemoryModuleType.NEAREST_HOSTILE, MemoryModuleType.SECONDARY_JOB_SITE, MemoryModuleType.HIDING_PLACE, MemoryModuleType.HEARD_BELL_TIME, MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
     private static final ImmutableList<SensorType<? extends Sensor<? super XorgEntity>>> SENSOR_TYPES = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS, SensorType.NEAREST_ITEMS, SensorType.NEAREST_BED, SensorType.HURT_BY);
@@ -39,12 +36,32 @@ public class XorgEntity extends CreatureEntity {
             , Pair.of(new WalkTowardsLookTargetTask(0.5F, 2), 1)
     ))));
 
+    public static final int NUM_ACTIONS = 11;
+
+    // Don't change order of anything
+    public static final int ACTION_BUILD_Z_NEG = 0;
+    public static final int ACTION_BUILD_Z = 1;
+    public static final int ACTION_BUILD_X_NEG = 2;
+    public static final int ACTION_BUILD_X = 3;
+
+    public static final int ACTION_BUILD_DOWN = 4;
+
+    public static final int ACTION_BREAK_DOWN = 5;
+    public static final int ACTION_BREAK_UP = 6;
+
+    public static final int ACTION_BREAK_Z_NEG = 7;
+    public static final int ACTION_BREAK_Z = 8;
+    public static final int ACTION_BREAK_X_NEG = 9;
+    public static final int ACTION_BREAK_X = 10;
+
     private static final BlockPos[] SURROUNDING = new BlockPos[] { new BlockPos(0, -1, 0), new BlockPos(0, 0, 1), new BlockPos(1, 0, 0), new BlockPos(0, 0, -1), new BlockPos(-1, 0, 0), new BlockPos(0, 1, 1), new BlockPos(1, 1, 0), new BlockPos(0, 1, -1), new BlockPos(-1, 1, 0), new BlockPos(0, 2, 0) };
 
     private static final double SPEED_THRESHOLD = 0.1;
     private static final BlockState BUILDING_BLOCK = Blocks.PINK_CONCRETE.defaultBlockState();
 
     public XorgController controller;
+
+    private boolean training;
 
     private long lastTimeCheck;
     private BlockPos goalPos;
@@ -57,6 +74,7 @@ public class XorgEntity extends CreatureEntity {
         super(type, world);
         controller = new XorgController(this);
 
+        training = false;
         goalPos = BlockPos.ZERO;
         nextPos = BlockPos.ZERO;
         lastTimeCheck = world.getGameTime();
@@ -182,6 +200,28 @@ public class XorgEntity extends CreatureEntity {
         return goalPos != BlockPos.ZERO && position().distanceTo(Vector3d.atCenterOf(goalPos)) <= 1.5;
     }
 
+    public void act(Integer action) {
+        switch (action) {
+            case ACTION_BUILD_Z_NEG:
+            case ACTION_BUILD_Z:
+            case ACTION_BUILD_X_NEG:
+            case ACTION_BUILD_X:
+                tryBuild(action);
+                break;
+            case ACTION_BUILD_DOWN:
+                tryJumpAndPlaceBlockUnderneath();
+                break;
+            case ACTION_BREAK_DOWN:
+            case ACTION_BREAK_UP:
+            case ACTION_BREAK_Z_NEG:
+            case ACTION_BREAK_Z:
+            case ACTION_BREAK_X_NEG:
+            case ACTION_BREAK_X:
+                tryBreak(action);
+                break;
+        }
+    }
+
     // Only for horizontal directions, starts from block underneath first
     public void tryBuild(int direction) {
         Direction dir = Direction.values()[direction + 2];
@@ -211,7 +251,7 @@ public class XorgEntity extends CreatureEntity {
 
     // All directions -> horizontal breakage starts from top then bottom
     public void tryBreak(int direction) {
-        Direction dir = Direction.values()[direction - XorgMDP.ACTION_BREAK_DOWN];
+        Direction dir = Direction.values()[direction - ACTION_BREAK_DOWN];
         BlockPos pos = blockPosition().offset(dir.getNormal());
 
         if (direction > 5) {
@@ -220,7 +260,7 @@ public class XorgEntity extends CreatureEntity {
 
         // First air check for horizontal breakage
         if (BlockUtil.isAir(level, pos)) {
-            if (direction > XorgMDP.ACTION_BREAK_UP) {
+            if (direction > ACTION_BREAK_UP) {
                 pos = pos.below();
             } else {
                 return;
@@ -263,5 +303,13 @@ public class XorgEntity extends CreatureEntity {
         }
 
         return -4;
+    }
+
+    public int getID() {
+        return controller.getID();
+    }
+
+    public void setID(int id) {
+        controller.setID(id);
     }
 }

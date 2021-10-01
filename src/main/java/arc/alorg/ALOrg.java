@@ -4,6 +4,7 @@ import arc.alorg.client.core.ClientProxy;
 import arc.alorg.common.block.ModBlocks;
 import arc.alorg.common.block.tiles.ModTiles;
 import arc.alorg.common.core.IProxy;
+import arc.alorg.common.core.command.ALOrgCommand;
 import arc.alorg.common.entity.ModEntities;
 import arc.alorg.common.item.ModItems;
 import arc.alorg.data.DataGenerators;
@@ -14,6 +15,7 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
@@ -46,6 +48,11 @@ public class ALOrg {
         modBus.addListener(ModEntities::registerAttributes);
 
         IEventBus forgeBus = MinecraftForge.EVENT_BUS;
+        forgeBus.addListener(this::registerCommands);
+    }
+
+    private void registerCommands(RegisterCommandsEvent event) {
+        ALOrgCommand.register(event.getDispatcher());
     }
 
     public static ResourceLocation rl(String path) {
