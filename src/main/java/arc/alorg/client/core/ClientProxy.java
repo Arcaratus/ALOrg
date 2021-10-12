@@ -12,6 +12,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 public class ClientProxy implements IProxy {
@@ -19,11 +20,24 @@ public class ClientProxy implements IProxy {
     @Override
     public void registerHandlers() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        modBus.addListener(this::clientSetup);
 
         IEventBus forgeBus = MinecraftForge.EVENT_BUS;
 
+
+    }
+
+    private void clientSetup(FMLClientSetupEvent event) {
         registerRenderTypes();
         registerEntityRenderers();
+    }
+
+    private static void registerRenderTypes() {
+        RenderTypeLookup.setRenderLayer(ModBlocks.TRAINING_GLASS, RenderType.translucent());
+    }
+
+    private static void registerEntityRenderers() {
+        RenderingRegistry.registerEntityRenderingHandler(ModEntities.XORG, XorgRenderer::new);
     }
 
     @Override
@@ -34,13 +48,5 @@ public class ClientProxy implements IProxy {
     @Override
     public PlayerEntity getClientPlayer() {
         return Minecraft.getInstance().player;
-    }
-
-    private static void registerRenderTypes() {
-        RenderTypeLookup.setRenderLayer(ModBlocks.TRAINING_GLASS, RenderType.translucent());
-    }
-
-    private static void registerEntityRenderers() {
-        RenderingRegistry.registerEntityRenderingHandler(ModEntities.XORG, XorgRenderer::new);
     }
 }

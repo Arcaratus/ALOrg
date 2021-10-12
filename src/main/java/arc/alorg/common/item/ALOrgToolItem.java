@@ -1,5 +1,6 @@
 package arc.alorg.common.item;
 
+import arc.alorg.common.block.tiles.TrainingTile;
 import arc.alorg.common.entity.XorgEntity;
 import arc.alorg.common.util.BlockUtil;
 import arc.alorg.common.util.ItemNBTHelper;
@@ -57,9 +58,26 @@ public class ALOrgToolItem extends Item {
     @Override
     public ActionResultType useOn(ItemUseContext context) {
         World world = context.getLevel();
-        BlockPos pos = context.getClickedPos();
+        if (world.isClientSide()) {
+            return ActionResultType.sidedSuccess(true);
+        }
 
-        BlockUtil.hollowCube(world, pos, pos.offset(3, 3, 3), Blocks.GLASS.defaultBlockState());
+        BlockPos pos = context.getClickedPos();
+        PlayerEntity player = context.getPlayer();
+        ItemStack stack = context.getItemInHand();
+
+        if (player != null && world.getBlockEntity(pos) instanceof TrainingTile) {
+            TrainingTile trainingTile = (TrainingTile) world.getBlockEntity(pos);
+
+            if (player.isShiftKeyDown()) {
+                int id = getID(stack);
+                trainingTile.startTraining(id);
+                player.sendMessage(new TranslationTextComponent("message.alorg.set_id", id), Util.NIL_UUID);
+            } else {
+                player.sendMessage(new TranslationTextComponent("message.alorg.id", trainingTile.getTraining().getID()), Util.NIL_UUID);
+            }
+        }
+
         return ActionResultType.sidedSuccess(world.isClientSide());
     }
 
