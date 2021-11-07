@@ -81,7 +81,6 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
     protected void postEpisode() {
         if (getHistoryProcessor() != null)
             getHistoryProcessor().stopMonitor();
-
     }
 
     protected void preEpisode() {
@@ -90,8 +89,6 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
 
     public void run() {
         context = new RunContext();
-
-        ALOrg.LOGGER.info("Learner started!");
 
 //        while (!getAsyncGlobal().isTrainingComplete()) {
 
@@ -125,6 +122,12 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
         if (episodeComplete) {
             finishEpisode(context);
         }
+    }
+
+    public void episodeComplete() {
+        ALOrg.LOGGER.info("Episode completed!");
+        episodeComplete = true;
+        finishEpisode(context);
     }
 
     private boolean finishEpoch(RunContext context) {
@@ -161,7 +164,6 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
 
     private void finishEpisode(RunContext context) {
         postEpisode();
-
         ALOrg.LOGGER.info("Episode step: " + currentEpisodeStepCount + ", Episode: " + episodeCount + ", Epoch: " + epochCount + ", reward: " + context.rewards);
     }
 

@@ -2,9 +2,7 @@ package arc.alorg.common.item;
 
 import arc.alorg.common.block.tiles.TrainingTile;
 import arc.alorg.common.entity.XorgEntity;
-import arc.alorg.common.util.BlockUtil;
 import arc.alorg.common.util.ItemNBTHelper;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -26,8 +24,6 @@ import java.util.List;
 
 public class ALOrgToolItem extends Item {
     private static final String TAG_ID = "id";
-
-    private int id;
 
     public ALOrgToolItem(Properties properties) {
         super(properties);
@@ -71,10 +67,11 @@ public class ALOrgToolItem extends Item {
 
             if (player.isShiftKeyDown()) {
                 int id = getID(stack);
-                trainingTile.startTraining(id);
+                trainingTile.setupTraining(id);
                 player.sendMessage(new TranslationTextComponent("message.alorg.set_id", id), Util.NIL_UUID);
             } else {
-                player.sendMessage(new TranslationTextComponent("message.alorg.id", trainingTile.getTraining().getID()), Util.NIL_UUID);
+                trainingTile.toggleTraining();
+                player.sendMessage(new TranslationTextComponent("message.alorg.id", trainingTile.getID()), Util.NIL_UUID);
             }
         }
 

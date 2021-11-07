@@ -19,7 +19,7 @@ public final class ModBlocks {
     private static final AbstractBlock.IExtendedPositionPredicate<EntityType<?>> NO_SPAWN = (state, world, pos, et) -> false;
     private static final AbstractBlock.IPositionPredicate NO_SUFFOCATION = (state, world, pos) -> false;
 
-    public static final Block GOAL = new GoalBlock(Properties.of(Material.METAL).strength(2, 10).sound(SoundType.METAL));
+    public static final Block GOAL = new GoalBlock(Properties.of(Material.METAL).strength(30, 30).sound(SoundType.METAL));
     public static final Block TRAINING = new TrainingBlock(Properties.of(Material.METAL).strength(2, 10).sound(SoundType.METAL));
     public static final Block TRAINING_GLASS = new ALOrgGlassBlock(Properties.copy(Blocks.GLASS).strength(30, 30).noOcclusion().isViewBlocking(NO_SUFFOCATION).isSuffocating(NO_SUFFOCATION).isValidSpawn(NO_SPAWN));
 

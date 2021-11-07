@@ -14,6 +14,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MoverType;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.schedule.Activity;
@@ -118,6 +119,13 @@ public class XorgEntity extends CreatureEntity {
     }
 
     @Override
+    public void move(MoverType moverType, Vector3d vec) {
+        if (training) {
+            super.move(moverType, vec);
+        }
+    }
+
+    @Override
     protected void customServerAiStep() {
         level.getProfiler().push("xorgBrain");
         getBrain().tick((ServerWorld) level, this);
@@ -134,18 +142,17 @@ public class XorgEntity extends CreatureEntity {
             if (getBrain().hasMemoryValue(MemoryModuleType.WALK_TARGET)) {
                 goalPos = getBrain().getMemory(MemoryModuleType.WALK_TARGET).get().getTarget().currentBlockPosition();
 
-                if (getNavigation().getPath() != null) {
-                    nextPos = getNavigation().getPath().getNextNodePos();
-                }
+//                if (getNavigation().getPath() != null) {
+//                    nextPos = getNavigation().getPath().getNextNodePos();
+//                }
 
                 if (getDeltaMovement().length() >= SPEED_THRESHOLD) {
-                    ALOrg.LOGGER.info("Moving...");
+                    ALOrg.LOGGER.info("[" + controller.getID() + "]: Moving...");
                     lastTimeCheck = level.getGameTime();
                 } else if (reachedGoal()) {
                     if (trainingRunning) {
-                        ALOrg.LOGGER.info("Reached goal!");
+                        ALOrg.LOGGER.info("[" + controller.getID() + "]: Reached goal!");
                         trainingRunning = false;
-                        controller.setDone(true);
                         controller.stopA2C();
                     }
                 } else if (isStuckMoreThan(10)) {
@@ -153,7 +160,8 @@ public class XorgEntity extends CreatureEntity {
                     controller.runA2C();
                 }
             } else {
-                ALOrg.LOGGER.info("No memory");
+                ALOrg.LOGGER.info("[" + controller.getID() + "]: No memory");
+                heal(getMaxHealth());
                 lastTimeCheck = level.getGameTime();
                 goalPos = BlockPos.ZERO;
                 nextPos = BlockPos.ZERO;
@@ -187,17 +195,19 @@ public class XorgEntity extends CreatureEntity {
 
     public XorgState getXorgState() {
         Vector3d goalDiff = position().vectorTo(Vector3d.atCenterOf(goalPos));
-        Vector3d nextDiff = position().vectorTo(Vector3d.atCenterOf(nextPos));
-        return new XorgState(goalDiff.x, goalDiff.y, goalDiff.z, goalDiff.length(), nextDiff.x, nextDiff.y, nextDiff.z, getSurroundingBlocks());
+//        Vector3d nextDiff = position().vectorTo(Vector3d.atCenterOf(nextPos));
+        return new XorgState(goalDiff.x, goalDiff.y, goalDiff.z, goalDiff.length(),
+//                nextDiff.x, nextDiff.y, nextDiff.z,
+                getSurroundingBlocks());
     }
 
     public boolean isStuckMoreThan(long time) {
-        ALOrg.LOGGER.info("DIFF: " + (level.getGameTime() - lastTimeCheck));
+//        ALOrg.LOGGER.info("DIFF: " + (level.getGameTime() - lastTimeCheck));
         return getDeltaMovement().length() < SPEED_THRESHOLD && level.getGameTime() - lastTimeCheck >= time;
     }
 
     public boolean reachedGoal() {
-        return goalPos != BlockPos.ZERO && position().distanceTo(Vector3d.atCenterOf(goalPos)) <= 1.5;
+        return goalPos != BlockPos.ZERO && position().add(0, 0.5, 0).distanceTo(Vector3d.atCenterOf(goalPos)) <= 1.89;
     }
 
     public void act(Integer action) {
@@ -273,7 +283,7 @@ public class XorgEntity extends CreatureEntity {
         }
 
         BlockState blockState = level.getBlockState(pos);
-        if (blockState.getBlock().getExplosionResistance(blockState, level, pos, null) < 20) { // idk if this is correct
+        if (blockState.getBlock() != ModBlocks.GOAL && blockState.getBlock().getExplosionResistance(blockState, level, pos, null) < 20) { // idk if this is correct
             level.destroyBlock(pos, false, this);
             acted = true;
         }
@@ -310,6 +320,14 @@ public class XorgEntity extends CreatureEntity {
     }
 
     public void setID(int id) {
-        controller.setID(id);
+        controller.loadA2C(id);
+    }
+
+    public boolean isTraining() {
+        return training;
+    }
+
+    public void setTraining(boolean training) {
+        this.training = training;
     }
 }

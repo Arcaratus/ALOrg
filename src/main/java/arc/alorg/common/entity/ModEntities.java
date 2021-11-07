@@ -10,7 +10,7 @@ import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.registries.IForgeRegistry;
 
 public final class ModEntities {
-    public static final EntityType<XorgEntity> XORG = EntityType.Builder.<XorgEntity>of(XorgEntity::new, EntityClassification.CREATURE)
+    public static final EntityType<XorgEntity> XORG = EntityType.Builder.<XorgEntity>of(XorgEntity::new, EntityClassification.MISC)
             .sized(0.6F, 1.8F)
             .setTrackingRange(12)
             .setUpdateInterval(1)

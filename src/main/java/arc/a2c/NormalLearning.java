@@ -1,6 +1,5 @@
 package arc.a2c;
 
-import arc.alorg.ALOrg;
 import org.deeplearning4j.rl4j.learning.Learning;
 import org.deeplearning4j.rl4j.learning.async.IAsyncGlobal;
 import org.deeplearning4j.rl4j.learning.configuration.IAsyncLearningConfiguration;
@@ -42,7 +41,6 @@ public abstract class NormalLearning <OBSERVATION extends Encodable, ACTION, ACT
     }
 
     public void init() {
-        ALOrg.LOGGER.info("Learning started...");
         canContinue = listeners.notifyTrainingStarted();
         if (canContinue) {
             learner = newLearner();
@@ -57,6 +55,7 @@ public abstract class NormalLearning <OBSERVATION extends Encodable, ACTION, ACT
         }
 
         if (!canContinue) {
+            learner.episodeComplete();
             listeners.notifyTrainingFinished();
         }
     }

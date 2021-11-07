@@ -19,7 +19,7 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
 
     private static final double REWARD_DISTANCE_SCALE = 10;
 
-    private static final int NUM_FEATURES = 17;
+    private static final int NUM_FEATURES = 14;
 
     private final Random rand;
 
@@ -27,18 +27,13 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
     private final ObservationSpace<XorgState> observationSpace = new ArrayObservationSpace<>(new int[]{NUM_FEATURES});
 
     private boolean done;
-//    private boolean goalReached;
 
-    //    private World world;
     private XorgEntity xorg;
-//    private BlockPos goalPos;
 
     public XorgMDP(XorgEntity xorg, Random rand) {
         this.rand = rand;
 
-//        this.world = world;
         this.xorg = xorg;
-//        this.goalPos = goalPos;
     }
 
     @Override
@@ -53,6 +48,9 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
 
     @Override
     public boolean isDone() {
+        if (xorg.reachedGoal())
+            done = true;
+
         return done;
     }
 
@@ -63,9 +61,10 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
     @Override
     public XorgState reset() {
         done = false;
-//        goalReached = false;
 
-        return new XorgState(0, 0, 0, 0, 0, 0, 0, new double[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        return new XorgState(0, 0, 0, 0,
+//                0, 0, 0,
+                new double[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     }
 
     @Override
@@ -91,7 +90,7 @@ public class XorgMDP implements MDP<XorgState, Integer, DiscreteSpace> {
 
     @Override
     public void close() {
-        // Do nothing
+        done = true;
     }
 
     @Override

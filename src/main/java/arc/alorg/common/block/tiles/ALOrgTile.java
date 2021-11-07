@@ -29,8 +29,8 @@ public class ALOrgTile extends TileEntity {
     }
 
     @Override
-    public void deserializeNBT(BlockState state, CompoundNBT tag) {
-        super.deserializeNBT(state, tag);
+    public void load(BlockState state, CompoundNBT tag) {
+        super.load(state, tag);
         readPacketNBT(tag);
     }
 
@@ -40,7 +40,7 @@ public class ALOrgTile extends TileEntity {
 
     @Override
     public final SUpdateTileEntityPacket getUpdatePacket() {
-        CompoundNBT tag = new CompoundNBT();
+        CompoundNBT tag = getUpdateTag();
         writePacketNBT(tag);
         return new SUpdateTileEntityPacket(getBlockPos(), -999, tag);
     }
