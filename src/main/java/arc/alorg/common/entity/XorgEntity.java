@@ -55,10 +55,26 @@ public class XorgEntity extends CreatureEntity {
     public static final int ACTION_BREAK_X_NEG = 9;
     public static final int ACTION_BREAK_X = 10;
 
-    private static final BlockPos[] SURROUNDING = new BlockPos[] { new BlockPos(0, -1, 0), new BlockPos(0, 0, 1), new BlockPos(1, 0, 0), new BlockPos(0, 0, -1), new BlockPos(-1, 0, 0), new BlockPos(0, 1, 1), new BlockPos(1, 1, 0), new BlockPos(0, 1, -1), new BlockPos(-1, 1, 0), new BlockPos(0, 2, 0) };
+    private static final BlockPos[] SURROUNDING = new BlockPos[] {
+            new BlockPos(0, -1, 0),
+            new BlockPos(0, -1, 1),
+            new BlockPos(1, -1, 0),
+            new BlockPos(0, -1, -1),
+            new BlockPos(-1, -1, 0),
+            new BlockPos(0, 0, 1),
+            new BlockPos(1, 0, 0),
+            new BlockPos(0, 0, -1),
+            new BlockPos(-1, 0, 0),
+            new BlockPos(0, 1, 1),
+            new BlockPos(1, 1, 0),
+            new BlockPos(0, 1, -1),
+            new BlockPos(-1, 1, 0),
+            new BlockPos(0, 2, 0)
+    };
 
     private static final double SPEED_THRESHOLD = 0.1;
     private static final BlockState BUILDING_BLOCK = Blocks.PINK_CONCRETE.defaultBlockState();
+    private static final double distanceThreshold = 1.5;
 
     public XorgController controller;
 
@@ -207,7 +223,7 @@ public class XorgEntity extends CreatureEntity {
     }
 
     public boolean reachedGoal() {
-        return goalPos != BlockPos.ZERO && position().add(0, 0.5, 0).distanceTo(Vector3d.atCenterOf(goalPos)) <= 1.89;
+        return goalPos != BlockPos.ZERO && (position().add(0, 0.5, 0).distanceTo(Vector3d.atCenterOf(goalPos)) <= distanceThreshold || position().add(0, 1.5, 0).distanceTo(Vector3d.atCenterOf(goalPos)) <= distanceThreshold);
     }
 
     public void act(Integer action) {
@@ -264,16 +280,12 @@ public class XorgEntity extends CreatureEntity {
         Direction dir = Direction.values()[direction - ACTION_BREAK_DOWN];
         BlockPos pos = blockPosition().offset(dir.getNormal());
 
-        if (direction > 5) {
+        if (direction > ACTION_BREAK_DOWN) {
             pos = pos.above();
-        }
 
-        // First air check for horizontal breakage
-        if (BlockUtil.isAir(level, pos)) {
-            if (direction > ACTION_BREAK_UP) {
+            // First air check for horizontal breakage
+            if (BlockUtil.isAir(level, pos)) {
                 pos = pos.below();
-            } else {
-                return;
             }
         }
 
@@ -289,9 +301,9 @@ public class XorgEntity extends CreatureEntity {
         }
     }
 
-    // Returns a double[10] where s[0] is the bottom block, s[1-8] are the sides, and s[9] is the block above
+    // Returns a double[14] where s[0] is the bottom block, s[1-4] are the bottom sides, and s[5-12] are the sides, and s[13] is the block above
     public double[] getSurroundingBlocks() {
-        double[] surrounding = new double[10];
+        double[] surrounding = new double[14];
 
         for (int i = 0; i < SURROUNDING.length; i++) {
             surrounding[i] = blockToInt(level.getBlockState(blockPosition().offset(SURROUNDING[i])));
@@ -329,5 +341,6 @@ public class XorgEntity extends CreatureEntity {
 
     public void setTraining(boolean training) {
         this.training = training;
+        goalPos = BlockPos.ZERO;
     }
 }

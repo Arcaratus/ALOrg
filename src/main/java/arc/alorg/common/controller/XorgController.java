@@ -17,7 +17,6 @@ public class XorgController extends Controller {
     private static final int LAYER_SIZE = 32;
     private static final int NUM_INPUTS = 8;
 
-    private XorgEntity xorg;
     private int id;
 
     private boolean isRunning;
@@ -25,7 +24,6 @@ public class XorgController extends Controller {
     private A2CDiscrete<XorgState> a2c;
 
     public XorgController(XorgEntity xorg) {
-        this.xorg = xorg;
         id = 1;
 
         random = new Random();
@@ -38,7 +36,7 @@ public class XorgController extends Controller {
                 1,      //Max step
                 1,         //Number of threads
                 1,             //t_max
-                1,        //num step noop warmup
+                4,        //num step noop warmup
                 0.1,     //reward scaling
                 0.99,          //gamma
                 1.0         //td-error clipping
@@ -48,7 +46,7 @@ public class XorgController extends Controller {
                 .updater(new Adam(0.01))
                 .useLSTM(true)
                 .l2(0)
-                .numHiddenNodes(28)
+                .numHiddenNodes(36)
                 .numLayer(5)
                 .build();
 
@@ -61,6 +59,7 @@ public class XorgController extends Controller {
 
     public void setID(int id) {
         this.id = id;
+        a2c.setID(id);
     }
 
     public void runA2C() {

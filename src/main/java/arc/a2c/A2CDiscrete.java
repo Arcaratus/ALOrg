@@ -37,7 +37,7 @@ public abstract class A2CDiscrete<OBSERVATION extends Encodable> extends NormalL
     }
 
     public A2CLearnerDiscrete newLearner() {
-        return new A2CLearnerDiscrete(mdp.newInstance(), asyncGlobal, this.getConfiguration(), getListeners());
+        return new A2CLearnerDiscrete(mdp.newInstance(), asyncGlobal, this.getConfiguration(), getListeners(), getID());
     }
 
     @Override

@@ -20,8 +20,8 @@ public abstract class LearnerDiscrete<OBSERVATION extends Encodable, NN extends 
     private UpdateAlgorithm<NN> updateAlgorithm;
     private ExperienceHandler experienceHandler;
 
-    public LearnerDiscrete(IAsyncGlobal<NN> asyncGlobal, MDP<OBSERVATION, Integer, DiscreteSpace> mdp, TrainingListenerList listeners) {
-        super(mdp, listeners);
+    public LearnerDiscrete(IAsyncGlobal<NN> asyncGlobal, MDP<OBSERVATION, Integer, DiscreteSpace> mdp, TrainingListenerList listeners, int id) {
+        super(mdp, listeners, id);
         synchronized (asyncGlobal) {
             current = (NN) asyncGlobal.getTarget().clone();
         }

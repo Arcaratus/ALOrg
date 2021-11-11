@@ -20,8 +20,8 @@ public class A2CLearnerDiscrete<OBSERVATION extends Encodable> extends LearnerDi
 
     final private Random rnd;
 
-    public A2CLearnerDiscrete(MDP<OBSERVATION, Integer, DiscreteSpace> mdp, IAsyncGlobal<IActorCritic> asyncGlobal, A3CLearningConfiguration a3cc, TrainingListenerList listeners) {
-        super(asyncGlobal, mdp, listeners);
+    public A2CLearnerDiscrete(MDP<OBSERVATION, Integer, DiscreteSpace> mdp, IAsyncGlobal<IActorCritic> asyncGlobal, A3CLearningConfiguration a3cc, TrainingListenerList listeners, int id) {
+        super(asyncGlobal, mdp, listeners, id);
         this.configuration = a3cc;
         this.asyncGlobal = asyncGlobal;
 

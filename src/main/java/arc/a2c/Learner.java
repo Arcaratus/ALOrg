@@ -1,6 +1,7 @@
 package arc.a2c;
 
 import arc.alorg.ALOrg;
+import arc.alorg.common.controller.XorgTrainingMonitor;
 import org.deeplearning4j.gym.StepReply;
 import org.deeplearning4j.rl4j.learning.HistoryProcessor;
 import org.deeplearning4j.rl4j.learning.IEpochTrainer;
@@ -32,9 +33,13 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
 
     private final TrainingListenerList listeners;
 
-    public Learner(MDP<OBSERVATION, ACTION, ACTION_SPACE> mdp, TrainingListenerList listeners) {
+    private int id;
+    private int time;
+
+    public Learner(MDP<OBSERVATION, ACTION, ACTION_SPACE> mdp, TrainingListenerList listeners, int id) {
         this.mdp = new LegacyMDPWrapper<>(mdp, null);
         this.listeners = listeners;
+        this.id = id;
     }
 
     @Override
@@ -114,6 +119,7 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
         }
 
         episodeComplete = handleTraining(context);
+        time++;
 
         if (!finishEpoch(context)) {
             return;
@@ -152,6 +158,7 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
     }
 
     private void startEpisode(RunContext context) {
+        time = 0;
         getCurrent().reset();
         Learning.InitMdp<Observation> initMdp = refacInitMdp();
 
@@ -164,6 +171,7 @@ public abstract class Learner<OBSERVATION extends Encodable, ACTION, ACTION_SPAC
 
     private void finishEpisode(RunContext context) {
         postEpisode();
+        XorgTrainingMonitor.updateMonitor(id, epochCount, context.rewards, time);
         ALOrg.LOGGER.info("Episode step: " + currentEpisodeStepCount + ", Episode: " + episodeCount + ", Epoch: " + epochCount + ", reward: " + context.rewards);
     }
 

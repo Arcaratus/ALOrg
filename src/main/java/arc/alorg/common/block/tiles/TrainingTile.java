@@ -2,6 +2,7 @@ package arc.alorg.common.block.tiles;
 
 import arc.alorg.ALOrg;
 import arc.alorg.common.block.ModBlocks;
+import arc.alorg.common.controller.XorgTrainingMonitor;
 import arc.alorg.common.entity.ModEntities;
 import arc.alorg.common.entity.XorgEntity;
 import arc.alorg.common.util.BlockUtil;
@@ -10,6 +11,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -116,8 +118,6 @@ public class TrainingTile extends ALOrgTile implements ITickableTileEntity {
         setupEnvironment();
 
         runTraining();
-
-        setChanged();
     }
 
     public void toggleTraining() {
@@ -165,11 +165,16 @@ public class TrainingTile extends ALOrgTile implements ITickableTileEntity {
         level.setBlock(center, Blocks.AIR.defaultBlockState(), 3);
         level.setBlock(center.above(), Blocks.AIR.defaultBlockState(), 3);
 
-        if (spawn)
+        if (spawn) {
             level.addFreshEntity(xorg);
+        }
 
         goalPos = new BlockPos(random.ints(innerStart.getX(), innerEnd.getX() + 1).findFirst().getAsInt(), random.ints(innerStart.getY(), innerStart.getY() + 5).findFirst().getAsInt(), random.ints(innerStart.getZ(), innerEnd.getZ() + 1).findFirst().getAsInt());
         level.setBlock(goalPos, ModBlocks.GOAL.defaultBlockState(), 3);
+        level.setBlock(goalPos.above(), Blocks.AIR.defaultBlockState(), 3);
+        level.setBlock(goalPos.above(2), Blocks.AIR.defaultBlockState(), 3);
+
+        notifyMonitor(Vector3d.atCenterOf(center).distanceTo(Vector3d.atCenterOf(goalPos)));
     }
 
     public boolean trainingFinished() {
@@ -201,5 +206,9 @@ public class TrainingTile extends ALOrgTile implements ITickableTileEntity {
             xorg.setID(id);
             xorg.setTraining(true);
         }
+    }
+
+    private void notifyMonitor(double distance) {
+        XorgTrainingMonitor.initMonitor(id, distance);
     }
 }

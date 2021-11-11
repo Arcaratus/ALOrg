@@ -13,6 +13,8 @@ public abstract class NormalLearning <OBSERVATION extends Encodable, ACTION, ACT
     private final TrainingListenerList listeners = new TrainingListenerList();
     private Learner learner;
 
+    private int id;
+
     public void addListener(TrainingListener listener) {
         listeners.add(listener);
     }
@@ -22,6 +24,14 @@ public abstract class NormalLearning <OBSERVATION extends Encodable, ACTION, ACT
     public abstract LearnerDiscrete newLearner();
 
     protected abstract IAsyncGlobal<NN> getAsyncGlobal();
+
+    public void setID(int id) {
+        this.id = id;
+    }
+
+    public int getID() {
+        return id;
+    }
 
     protected boolean isTrainingComplete() {
         return getAsyncGlobal().isTrainingComplete();
